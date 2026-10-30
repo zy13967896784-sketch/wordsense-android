@@ -49,3 +49,15 @@ powershell -ExecutionPolicy Bypass -File tools\build-android.ps1
 学习记录保存在应用私有存储中，不上传；录音只用于本地回放。
 
 词库为自建数据，例句为学习用改写，仅供个人学习使用。
+
+## 签名说明
+
+仓库不提交 `mobile/wordsense.jks`。源码重新构建前，自行生成一个开发签名：
+
+```powershell
+keytool -genkeypair -keystore mobile/wordsense.jks -alias wordsense `
+  -storepass wordsense -keypass wordsense -dname "CN=WordSense" `
+  -keyalg RSA -keysize 2048 -validity 10000
+```
+
+`dist/词感-android.apk` 已签名，普通用户可直接安装。
