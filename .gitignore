@@ -1,0 +1,11 @@
+dist/stage/
+dist/pack/
+dist/app.zip
+dist/*.idsig
+mobile/build/
+mobile/assets/www/
+*.log
+.DS_Store
+Thumbs.db
+
+*.jks
