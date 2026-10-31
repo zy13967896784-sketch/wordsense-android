@@ -59,6 +59,7 @@ Copy-Item (Join-Path $root 'index.html') $www
 Copy-Item (Join-Path $root 'manifest.webmanifest') $www
 Copy-Item (Join-Path $root 'assets') $www -Recurse
 Copy-Item (Join-Path $root 'js') $www -Recurse
+Copy-Item (Join-Path $root 'audio') $www -Recurse
 Copy-Item (Join-Path $root 'data\words.js') (Join-Path $www 'data\words.js')
 Remove-Item (Join-Path $www 'assets\app-icon-source.jpg') -Force -ErrorAction SilentlyContinue
 Write-Host ("网页资源 {0:N2} MB" -f ((Get-ChildItem $www -Recurse -File | Measure-Object Length -Sum).Sum / 1MB))
@@ -76,7 +77,7 @@ if ($LASTEXITCODE -ne 0) { throw 'aapt2 compile 失败' }
     --java (Join-Path $build 'gen') `
     --min-sdk-version 21 `
     --target-sdk-version 33 `
-    --version-code 13 `
+    --version-code 15 `
     --version-name 1.2.0
 if ($LASTEXITCODE -ne 0) { throw 'aapt2 link 失败' }
 

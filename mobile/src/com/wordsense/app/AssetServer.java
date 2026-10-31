@@ -176,11 +176,13 @@ public class AssetServer {
             }
             String url;
             String referer;
-            if ("youdao".equalsIgnoreCase(kind)) {
-                url = "https://dict.youdao.com/dictvoice?audio=" + URLEncoder.encode(text, "UTF-8") + "&type=2";
+            if ("youdao".equalsIgnoreCase(kind) || "youdao_uk".equalsIgnoreCase(kind)) {
+                String type = "youdao_uk".equalsIgnoreCase(kind) ? "1" : "2";
+                url = "https://dict.youdao.com/dictvoice?audio=" + URLEncoder.encode(text, "UTF-8") + "&type=" + type;
                 referer = "https://dict.youdao.com/";
             } else {
-                url = "https://fanyi.baidu.com/gettts?lan=en&text=" + URLEncoder.encode(text, "UTF-8") + "&spd=3&source=web";
+                String lan = "baidu_uk".equalsIgnoreCase(kind) ? "uk" : "en";
+                url = "https://fanyi.baidu.com/gettts?lan=" + lan + "&text=" + URLEncoder.encode(text, "UTF-8") + "&spd=3&source=web";
                 referer = "https://fanyi.baidu.com/";
             }
             HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
@@ -257,6 +259,8 @@ public class AssetServer {
         if (lower.endsWith(".svg")) return "image/svg+xml";
         if (lower.endsWith(".ico")) return "image/x-icon";
         if (lower.endsWith(".woff2")) return "font/woff2";
+        if (lower.endsWith(".ogg")) return "audio/ogg";
+        if (lower.endsWith(".mp3")) return "audio/mpeg";
         return "application/octet-stream";
     }
 }

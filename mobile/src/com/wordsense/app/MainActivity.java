@@ -51,6 +51,7 @@ public class MainActivity extends Activity {
     private AssetServer server;
     private TextToSpeech tts;
     private boolean ttsReady = false;
+    private String preferredAccent = "us";
     private String ttsVoiceName = "系统默认";
     private String pendingTts;
     private float pendingRate = 0.9f;
@@ -158,6 +159,17 @@ public class MainActivity extends Activity {
                     @Override
                     public void run() {
                         speakNow(text, (float) rate);
+                    }
+                });
+            }
+
+            @JavascriptInterface
+            public void setAccent(final String accent) {
+                preferredAccent = "uk".equals(accent) ? "uk" : "us";
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (tts != null) tts.setLanguage("uk".equals(preferredAccent) ? Locale.UK : Locale.US);
                     }
                 });
             }
@@ -484,7 +496,7 @@ public class MainActivity extends Activity {
             @Override
             public void onInit(int status) {
                 if (status == TextToSpeech.SUCCESS) {
-                    tts.setLanguage(Locale.US);
+                    tts.setLanguage("uk".equals(preferredAccent) ? Locale.UK : Locale.US);
                     pickTtsVoice();
                     tts.setSpeechRate(0.92f);
                     tts.setPitch(1.0f);
