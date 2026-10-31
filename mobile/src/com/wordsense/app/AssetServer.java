@@ -7,11 +7,14 @@ import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URL;
 import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -99,6 +102,10 @@ public class AssetServer {
             }
             String method = parts[0];
             String target = parts[1];
+            if ("/__tts".equals(target.split("\\?")[0])) {
+                handleTts(socket, method, target);
+                return;
+            }
             int q = target.indexOf('?');
             if (q >= 0) target = target.substring(0, q);
 
@@ -146,6 +153,63 @@ public class AssetServer {
         } catch (Exception ignored) {
         } finally {
             try { socket.close(); } catch (Exception ignored) { }
+        }
+    }
+
+    private void handleTts(Socket socket, String method, String target) {
+        try {
+            String query = target.indexOf('?') >= 0 ? target.substring(target.indexOf('?') + 1) : "";
+            String kind = "";
+            String text = "";
+            for (String kv : query.split("&")) {
+                int eq = kv.indexOf('=');
+                if (eq < 0) continue;
+                String k = kv.substring(0, eq);
+                String v = URLDecoder.decode(kv.substring(eq + 1), "UTF-8");
+                if ("kind".equals(k)) kind = v;
+                else if ("text".equals(k)) text = v;
+            }
+            text = text.trim();
+            if (text.length() == 0 || text.length() > 500) {
+                respond(socket, "400 Bad Request", null, null);
+                return;
+            }
+            String url;
+            String referer;
+            if ("youdao".equalsIgnoreCase(kind)) {
+                url = "https://dict.youdao.com/dictvoice?audio=" + URLEncoder.encode(text, "UTF-8") + "&type=2";
+                referer = "https://dict.youdao.com/";
+            } else {
+                url = "https://fanyi.baidu.com/gettts?lan=en&text=" + URLEncoder.encode(text, "UTF-8") + "&spd=3&source=web";
+                referer = "https://fanyi.baidu.com/";
+            }
+            HttpURLConnection conn = (HttpURLConnection) new URL(url).openConnection();
+            conn.setConnectTimeout(8000);
+            conn.setReadTimeout(15000);
+            conn.setRequestProperty("User-Agent", "Mozilla/5.0");
+            conn.setRequestProperty("Referer", referer);
+            int code = conn.getResponseCode();
+            InputStream is = (code >= 200 && code < 300) ? conn.getInputStream() : conn.getErrorStream();
+            byte[] body = is == null ? new byte[0] : readAll(is);
+            if (is != null) is.close();
+            if (code < 200 || code >= 300) {
+                respond(socket, "502 Bad Gateway", null, null);
+                return;
+            }
+            String type = conn.getContentType();
+            if (type == null || type.length() == 0) type = "audio/mpeg";
+            String headers = "HTTP/1.1 200 OK\r\n" +
+                    "Content-Type: " + type + "\r\n" +
+                    "Content-Length: " + body.length + "\r\n" +
+                    "Access-Control-Allow-Origin: *\r\n" +
+                    "Cache-Control: public, max-age=86400\r\n" +
+                    "Connection: close\r\n\r\n";
+            OutputStream out = socket.getOutputStream();
+            out.write(headers.getBytes("US-ASCII"));
+            if (!"HEAD".equals(method)) out.write(body);
+            out.flush();
+        } catch (Exception e) {
+            try { respond(socket, "502 Bad Gateway", null, null); } catch (Exception ignored) { }
         }
     }
 

@@ -76,7 +76,7 @@ if ($LASTEXITCODE -ne 0) { throw 'aapt2 compile 失败' }
     --java (Join-Path $build 'gen') `
     --min-sdk-version 21 `
     --target-sdk-version 33 `
-    --version-code 12 `
+    --version-code 13 `
     --version-name 1.2.0
 if ($LASTEXITCODE -ne 0) { throw 'aapt2 link 失败' }
 
