@@ -11,7 +11,7 @@
 8. 导出的备份/词表会保存到手机「下载/WordSense」目录。
 
 要求：Android 5.0 及以上；建议 Android 8+ 并保持系统 WebView 更新。
-本 APK 同时带 v1/v2/v3 签名，minSdk 21，versionCode 17。
+本 APK 同时带 v1/v2/v3 签名，minSdk 21，versionCode 18。
 本应用不联网、不上传数据，词库与程序均为本地资源。
 
 如果仍提示「该安装包与系统不兼容」（错误 -124）：

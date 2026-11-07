@@ -6,7 +6,7 @@
 
 从仓库的 `dist/` 取：
 
-- `词感-android.apk`（versionCode 17）
+- `词感-android.apk`（versionCode 18）
 - `安卓安装说明.txt`
 
 同签名覆盖安装会保留学习数据。
