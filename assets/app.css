@@ -1058,3 +1058,8 @@ body.in-session .main { padding-top: 8px; }
   .listen-parts { margin: 0 -2px; }
   .listen-tools { align-items: flex-start; }
 }
+.listen-sets { display: block; }
+.listen-year { margin-bottom: 18px; }
+.listen-year h3 { margin: 0 0 8px; font-family: var(--font-display); font-size: 18px; font-weight: 500; color: var(--ink-2); }
+.listen-year-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (max-width: 760px) { .listen-year-grid { grid-template-columns: 1fr; } }

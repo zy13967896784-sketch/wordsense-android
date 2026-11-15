@@ -93,6 +93,14 @@
       if (!key || DICT[key] || !g.zh) return;
       DICT[key] = { w: key, ph: '', pos: g.pos || '', zh: g.zh, bankName: '基础词' };
     });
+    // 精听原文补充词典（补足未收录词，避免点单词没有释义）
+    var listenGlosses = window.LISTENING_GLOSSES || {};
+    Object.keys(listenGlosses).forEach(function (key) {
+      if (!key || DICT[key]) return;
+      var g = listenGlosses[key] || {};
+      if (!g.zh) return;
+      DICT[key] = { w: key, ph: g.ph || '', pos: g.pos || '', zh: g.zh, bankName: '听力补充' };
+    });
   }
   rebuildIndex();
 
@@ -1135,13 +1143,22 @@
       wrap.innerHTML = '<div class="lib-empty">还没有听力数据</div>';
       return;
     }
-    wrap.innerHTML = listenState.data.map(function (set) {
-      var count = set.parts.reduce(function (n, p) { return n + p.sentences.length; }, 0);
-      return '<button type="button" class="listen-set-card" data-listen-set="' + esc(set.id) + '">' +
-        '<span class="ls-icon">' + ICON_SPEAK + '</span>' +
-        '<span class="ls-card-text"><strong>' + esc(set.title) + '</strong>' +
-        '<small>' + esc(String(set.parts.length)) + ' 篇 · ' + fmtListenTime(set.duration) + ' · ' + count + ' 句</small></span>' +
-        '<span class="ls-enter">精听 →</span></button>';
+    var groups = {};
+    listenState.data.forEach(function (set) {
+      var year = String(set.id).slice(0, 4);
+      if (!groups[year]) groups[year] = [];
+      groups[year].push(set);
+    });
+    wrap.innerHTML = Object.keys(groups).sort().reverse().map(function (year) {
+      return '<div class="listen-year"><h3>' + esc(year) + ' 年</h3><div class="listen-year-grid">' +
+        groups[year].map(function (set) {
+          var count = set.parts.reduce(function (n, p) { return n + p.sentences.length; }, 0);
+          return '<button type="button" class="listen-set-card" data-listen-set="' + esc(set.id) + '">' +
+            '<span class="ls-icon">' + ICON_SPEAK + '</span>' +
+            '<span class="ls-card-text"><strong>' + esc(set.title) + '</strong>' +
+            '<small>' + esc(String(set.parts.length)) + ' 篇 · ' + fmtListenTime(set.duration) + ' · ' + count + ' 句' + (set.online ? ' · 在线音频' : ' · 离线音频') + '</small></span>' +
+            '<span class="ls-enter">精听 →</span></button>';
+        }).join('') + '</div></div>';
     }).join('');
   }
 
@@ -1253,7 +1270,7 @@
     var audio = $('#listenAudio');
     if (audio) {
       audio.pause();
-      audio.src = '/' + set.audio;
+      audio.src = /^https?:/i.test(set.audio) ? set.audio : ('/' + set.audio);
       audio.load();
       audio.playbackRate = Number(($('#listenSpeed .is-active') || {}).dataset ? $('#listenSpeed .is-active').dataset.listenRate : 1) || 1;
     }
