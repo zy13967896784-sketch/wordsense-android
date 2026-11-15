@@ -127,7 +127,9 @@
     if (!bankIds || bankIds === 'all') return WORDS.slice();
     var set = {};
     [].concat(bankIds).forEach(function (id) { set[id] = true; });
-    return WORDS.filter(function (w) { return set[w.bankId]; });
+    return WORDS.filter(function (w) {
+      return set[w.bankId] || (w.banks && w.banks.some(function (id) { return set[id]; }));
+    });
   }
   var libMode = 'read';
   function modeKey(id, mode) { return (mode || 'read') + ':' + id; }
@@ -1095,6 +1097,198 @@
       var re = new RegExp('\\b' + esc(word).replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\w*', 'ig');
       return safe.replace(re, function (m) { return '<b>' + m + '</b>'; });
     } catch (e) { return safe; }
+  }
+
+  /* ---------------- 听力精听 ---------------- */
+  var listenState = { data: (window.LISTENING_DATA || []), set: null, rows: [], current: -1 };
+
+  function fmtListenTime(sec) {
+    sec = Number(sec);
+    if (!isFinite(sec) || sec < 0) sec = 0;
+    sec = Math.floor(sec);
+    return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
+  }
+
+  function listenDuration() {
+    var a = $('#listenAudio');
+    if (a && isFinite(a.duration) && a.duration > 0) return a.duration;
+    return (listenState.set && listenState.set.duration) || 0;
+  }
+
+  function listenEnHtml(text) {
+    var out = '';
+    String(text || '').split(/([A-Za-z][A-Za-z'’\-]*)/g).forEach(function (part) {
+      if (!part) return;
+      if (/^[A-Za-z]/.test(part)) {
+        out += '<button type="button" class="ls-word" data-ls-word="' + esc(part) + '">' + esc(part) + '</button>';
+      } else {
+        out += esc(part);
+      }
+    });
+    return out;
+  }
+
+  function listenRowsHtml(set) {
+    return set.sentences.map(function (x, i) {
+      var mark = /^(Section|Part\s|News Report|Conversation|Passage|Questions?\s)/i.test(x.en);
+      return '<div class="ls-row' + (mark ? ' ls-mark' : '') + '" data-ls-index="' + i + '" data-start="' + x.s + '">' +
+        '<span class="ls-no">' + (i + 1) + '</span>' +
+        '<div class="ls-text">' +
+        '<p class="ls-en">' + listenEnHtml(x.en) + '</p>' +
+        '<p class="ls-zh">' + esc(x.zh || '') + '</p>' +
+        '</div></div>';
+    }).join('');
+  }
+
+  function listenCurrentTime() {
+    var a = $('#listenAudio');
+    return a ? a.currentTime : 0;
+  }
+
+  function setListenCurrent(index, scroll) {
+    if (!listenState.rows.length) return;
+    index = Math.max(0, Math.min(listenState.rows.length - 1, index));
+    if (listenState.current === index) {
+      var t0 = $('#listenTime');
+      var a0 = $('#listenAudio');
+      if (t0 && a0) t0.textContent = fmtListenTime(a0.currentTime) + ' / ' + fmtListenTime(listenDuration());
+      return;
+    }
+    listenState.current = index;
+    listenState.rows.forEach(function (r, i) { r.classList.toggle('is-current', i === index); });
+    var row = listenState.rows[index];
+    if (row && scroll) {
+      var wrap = $('#listenTranscript');
+      if (wrap) {
+        var target = row.getBoundingClientRect().top - wrap.getBoundingClientRect().top + wrap.scrollTop - wrap.clientHeight / 2 + row.clientHeight / 2;
+        try { wrap.scrollTo({ top: Math.max(0, target), behavior: 'smooth' }); } catch (e) { wrap.scrollTop = Math.max(0, target); }
+      }
+    }
+    var t = $('#listenTime');
+    var a = $('#listenAudio');
+    if (t && a) t.textContent = fmtListenTime(a.currentTime) + ' / ' + fmtListenTime(listenDuration());
+  }
+
+  function syncListenHighlight(force) {
+    if (!listenState.set || !listenState.rows.length) return;
+    var t = listenCurrentTime();
+    var idx = -1;
+    for (var i = 0; i < listenState.set.sentences.length; i++) {
+      if (listenState.set.sentences[i].s <= t + 0.05) idx = i;
+      else break;
+    }
+    if (idx < 0) idx = 0;
+    var playing = !$('#listenAudio') || !$('#listenAudio').paused;
+    if (idx !== listenState.current || force) setListenCurrent(idx, playing);
+    else {
+      var time = $('#listenTime');
+      var a = $('#listenAudio');
+      if (time && a) time.textContent = fmtListenTime(t) + ' / ' + fmtListenTime(listenDuration());
+    }
+  }
+
+  function loadListeningSet(id) {
+    var set = listenState.data.find(function (x) { return x.id === id; }) || listenState.data[0];
+    if (!set) return;
+    listenState.set = set;
+    listenState.current = -1;
+    var audio = $('#listenAudio');
+    var title = $('#listenTitle');
+    if (title) title.textContent = set.title;
+    if (audio) {
+      audio.pause();
+      audio.src = '/' + set.audio;
+      audio.load();
+      audio.playbackRate = Number(($('#listenSpeed .is-active') || {}).dataset ? $('#listenSpeed .is-active').dataset.listenRate : 1) || 1;
+    }
+    var wrap = $('#listenTranscript');
+    if (wrap) wrap.innerHTML = listenRowsHtml(set);
+    listenState.rows = $$('#listenTranscript .ls-row');
+    var t = $('#listenTime');
+    if (t) t.textContent = '0:00 / ' + fmtListenTime(set.duration);
+    if (wrap) wrap.scrollTop = 0;
+    var sel = $('#listenSelect');
+    if (sel) sel.value = set.id;
+  }
+
+  function renderListening() {
+    if (!listenState.data.length) {
+      var wrap0 = $('#listenTranscript');
+      if (wrap0) wrap0.innerHTML = '<div class="lib-empty">还没有听力数据</div>';
+      return;
+    }
+    var sel = $('#listenSelect');
+    if (sel && !sel.options.length) {
+      sel.innerHTML = listenState.data.map(function (s) {
+        return '<option value="' + esc(s.id) + '">' + esc(s.title) + '</option>';
+      }).join('');
+    }
+    if (!listenState.set) loadListeningSet(listenState.data[0].id);
+    else if (sel && sel.value !== listenState.set.id) sel.value = listenState.set.id;
+    syncListenHighlight(false);
+  }
+
+  function showListenWordPanel(token, entry) {
+    var panel = $('#listenWordPanel');
+    if (!panel) return;
+    var known = !!entry;
+    panel.hidden = false;
+    panel.dataset.token = token;
+    panel.innerHTML =
+      '<button type="button" class="wp-close" data-listen-close aria-label="关闭词义">✕</button>' +
+      '<div class="wp-top"><span class="wp-word">' + esc(token) + '</span>' +
+      '<button type="button" class="icon-btn small" data-listen-speak="' + esc(token) + '">' + ICON_SPEAK + '</button></div>' +
+      (known && entry.ph ? '<p class="wp-ph">/' + esc(entry.ph) + '/ ' + esc(entry.pos || '') + '</p>' : '') +
+      '<p class="wp-zh">' + (known ? esc(entry.zh) : '词库暂未收录这个词，可以先听发音。') + '</p>' +
+      (known && entry.bankName ? '<p class="wp-note">来自「' + esc(entry.bankName) + '」</p>' : '');
+    speak(token, $('[data-listen-speak]', panel));
+  }
+
+  function initListening() {
+    if (!listenState.data.length) return;
+    var sel = $('#listenSelect');
+    if (sel) sel.addEventListener('change', function () { loadListeningSet(sel.value); });
+    var audio = $('#listenAudio');
+    if (audio) {
+      audio.addEventListener('timeupdate', function () { syncListenHighlight(false); });
+      audio.addEventListener('loadedmetadata', function () {
+        var t = $('#listenTime');
+        if (t) t.textContent = fmtListenTime(audio.currentTime) + ' / ' + fmtListenTime(listenDuration());
+      });
+      audio.addEventListener('seeked', function () { syncListenHighlight(true); });
+    }
+    var speed = $('#listenSpeed');
+    if (speed) speed.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-listen-rate]');
+      if (!b) return;
+      $$('button', speed).forEach(function (x) { x.classList.toggle('is-active', x === b); });
+      if (audio) audio.playbackRate = Number(b.dataset.listenRate) || 1;
+    });
+    var wrap = $('#listenTranscript');
+    if (wrap) wrap.addEventListener('click', function (e) {
+      var w = e.target.closest('[data-ls-word]');
+      if (w) {
+        e.stopPropagation();
+        var token = w.dataset.lsWord;
+        showListenWordPanel(token, lookupEntry(token));
+        return;
+      }
+      var row = e.target.closest('.ls-row');
+      if (row && audio && listenState.set) {
+        var s = listenState.set.sentences[Number(row.dataset.lsIndex)];
+        if (!s) return;
+        try { audio.currentTime = s.s; } catch (err) { }
+        setListenCurrent(Number(row.dataset.lsIndex), false);
+        var pr = audio.play();
+        if (pr && pr.catch) pr.catch(function () { });
+      }
+    });
+    var panel = $('#listenWordPanel');
+    if (panel) panel.addEventListener('click', function (e) {
+      if (e.target.closest('[data-listen-close]')) { panel.hidden = true; return; }
+      var sp = e.target.closest('[data-listen-speak]');
+      if (sp) { e.stopPropagation(); speak(sp.dataset.listenSpeak, sp); }
+    });
   }
 
   /* ---------------- 错词本 ---------------- */
@@ -3254,6 +3448,11 @@
     if (name === 'library') renderLibrary(true);
     if (name === 'stats') renderStats();
     if (name === 'wrong') renderWrong();
+    if (name === 'listening') renderListening();
+    if (name !== 'listening') {
+      var la = $('#listenAudio');
+      if (la) la.pause();
+    }
     renderTtsBtn();
   }
 
@@ -3385,6 +3584,7 @@
     loadOfflineAudioIndex();
     initBankSelects();
     initGithubLink();
+    initListening();
     applyAccent();
     setView('home');
     if (location.protocol === 'http:' && location.hostname === '127.0.0.1' && location.search.indexOf('desktop=1') >= 0) {

@@ -978,3 +978,45 @@ body.in-session .main { padding-top: 8px; }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* ---------- 听力精听 ---------- */
+.listen-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 20px; margin-bottom: 18px; }
+.listen-head h1 { margin: 4px 0 6px; font-family: var(--font-display); font-size: clamp(30px, 4vw, 42px); font-weight: 500; letter-spacing: -0.02em; }
+.listen-head .section-sub { margin: 0; color: var(--muted); font-size: 13px; }
+.listen-head .bank-select { min-width: 210px; }
+.listen-audio-card { padding: 16px 20px; margin-bottom: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; }
+.listen-now { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+.listen-now strong { font-size: 15px; color: var(--ink); font-weight: 550; }
+.listen-now span { font-family: var(--font-mono); font-size: 11px; color: var(--muted); white-space: nowrap; }
+#listenAudio { width: 100%; height: 42px; accent-color: var(--jade); }
+.listen-speed { display: flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 11px; color: var(--muted); }
+.listen-speed button { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 3px 10px; font-size: 11px; cursor: pointer; }
+.listen-speed button.is-active { background: var(--jade); border-color: var(--jade); color: #fff; }
+.listen-transcript { background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 8px 6px; max-height: 62vh; overflow-y: auto; scroll-behavior: smooth; }
+.ls-row { display: grid; grid-template-columns: 32px minmax(0, 1fr); gap: 10px; padding: 11px 12px; border-left: 3px solid transparent; border-radius: 10px; cursor: pointer; transition: background .2s, border-color .2s; }
+.ls-row:hover { background: var(--jade-soft); }
+.ls-row.is-current { background: var(--jade-soft); border-left-color: var(--jade); }
+.ls-no { font-family: var(--font-mono); font-size: 10px; color: var(--muted); padding-top: 3px; text-align: right; }
+.ls-text { min-width: 0; }
+.ls-en { margin: 0; font-size: 15px; line-height: 1.65; color: var(--ink); }
+.ls-zh { margin: 4px 0 0; font-size: 12.5px; line-height: 1.6; color: var(--muted); }
+.ls-row.is-current .ls-en { color: var(--jade-deep); font-weight: 500; }
+.ls-row.is-current .ls-zh { color: var(--ink-2); }
+.ls-mark .ls-en { color: var(--amber); font-weight: 600; }
+.ls-word { display: inline; border: 0; background: transparent; color: inherit; font: inherit; padding: 0 1px; margin: 0; cursor: pointer; border-radius: 3px; }
+.ls-word:hover { background: var(--jade-soft); color: var(--jade-deep); text-decoration: underline; text-underline-offset: 2px; }
+.listen-word-panel { position: fixed; left: 50%; bottom: 22px; transform: translateX(-50%); width: min(460px, calc(100vw - 28px)); z-index: 120; background: var(--card-solid); border: 1px solid var(--line); border-radius: 18px; box-shadow: 0 18px 50px rgba(20,30,25,.22); padding: 16px 18px; }
+.listen-word-panel[hidden] { display: none; }
+.listen-word-panel .wp-top { padding-right: 26px; }
+[data-theme="dark"] .listen-word-panel { background: var(--card-solid); }
+@media (max-width: 760px) {
+  .listen-head { flex-direction: column; align-items: stretch; gap: 10px; }
+  .listen-head .bank-select { width: 100%; min-width: 0; }
+  .listen-audio-card { position: sticky; top: 6px; z-index: 6; padding: 12px 14px; border-radius: 14px; }
+  .listen-transcript { max-height: 58vh; padding: 4px 2px; border-radius: 14px; }
+  .ls-row { grid-template-columns: 24px minmax(0, 1fr); gap: 7px; padding: 10px 8px; }
+  .ls-en { font-size: 14.5px; }
+  .ls-zh { font-size: 12px; }
+  .listen-word-panel { bottom: 12px; }
+}
+#view-listening { padding-bottom: 72px; }

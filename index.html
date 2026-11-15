@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="词感" />
-  <link rel="stylesheet" href="assets/app.css?v=20261112a" />
+  <link rel="stylesheet" href="assets/app.css?v=20261115b" />
 </head>
 <body>
   <div class="bg-art" aria-hidden="true">
@@ -39,6 +39,7 @@
         <button class="nav-btn is-active" data-nav="home">首页</button>
         <button class="nav-btn" data-nav="library">词库</button>
         <button class="nav-btn" data-nav="stats">统计</button>
+        <button class="nav-btn" data-nav="listening">精听</button>
         <button class="nav-btn" data-nav="wrong">错题本</button>
       </nav>
 
@@ -292,6 +293,33 @@
         <div class="card stats-breakdown" id="statsBreakdown"></div>
       </section>
 
+      <!-- ============ 听力精听 ============ -->
+      <section class="view" id="view-listening" aria-label="听力精听">
+        <div class="listen-head">
+          <div>
+            <p class="eyebrow">LISTENING INTENSIVE</p>
+            <h1>听力精听</h1>
+            <p class="section-sub">四级真题原声 · 读到哪句高亮哪句 · 点单词看释义</p>
+          </div>
+          <select class="bank-select" id="listenSelect" aria-label="选择听力真题"></select>
+        </div>
+        <div class="listen-audio-card">
+          <div class="listen-now">
+            <strong id="listenTitle">听力真题</strong>
+            <span id="listenTime">0:00 / 0:00</span>
+          </div>
+          <audio id="listenAudio" controls preload="metadata"></audio>
+          <div class="listen-speed" id="listenSpeed">
+            <span>语速</span>
+            <button type="button" data-listen-rate="0.75">0.75×</button>
+            <button type="button" data-listen-rate="1" class="is-active">1.0×</button>
+            <button type="button" data-listen-rate="1.25">1.25×</button>
+          </div>
+        </div>
+        <div class="listen-transcript" id="listenTranscript"></div>
+        <div class="listen-word-panel" id="listenWordPanel" hidden></div>
+      </section>
+
       <!-- ============ 错词本 ============ -->
       <section class="view" id="view-wrong" aria-label="错题本">
         <div class="section-head">
@@ -324,11 +352,12 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
 
-  <script src="data/words.js?v=20261112a"></script>
-  <script src="js/polyfills.js?v=20261112a"></script>
-  <script src="js/srs.js?v=20261112a"></script>
-  <script src="js/store.js?v=20261112a"></script>
-  <script src="js/score.js?v=20261112a"></script>
-  <script src="js/app.js?v=20261112a"></script>
+  <script src="data/words.js?v=20261115b"></script>
+  <script src="data/listening.js?v=20261115b"></script>
+  <script src="js/polyfills.js?v=20261115b"></script>
+  <script src="js/srs.js?v=20261115b"></script>
+  <script src="js/store.js?v=20261115b"></script>
+  <script src="js/score.js?v=20261115b"></script>
+  <script src="js/app.js?v=20261115b"></script>
 </body>
 </html>
