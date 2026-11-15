@@ -1100,7 +1100,7 @@
   }
 
   /* ---------------- 听力精听 ---------------- */
-  var listenState = { data: (window.LISTENING_DATA || []), set: null, rows: [], current: -1 };
+  var listenState = { data: (window.LISTENING_DATA || []), set: null, part: 0, rows: [], current: -1 };
 
   function fmtListenTime(sec) {
     sec = Number(sec);
@@ -1128,10 +1128,37 @@
     return out;
   }
 
-  function listenRowsHtml(set) {
-    return set.sentences.map(function (x, i) {
-      var mark = /^(Section|Part\s|News Report|Conversation|Passage|Questions?\s)/i.test(x.en);
-      return '<div class="ls-row' + (mark ? ' ls-mark' : '') + '" data-ls-index="' + i + '" data-start="' + x.s + '">' +
+  function renderListenSets() {
+    var wrap = $('#listenSets');
+    if (!wrap) return;
+    if (!listenState.data.length) {
+      wrap.innerHTML = '<div class="lib-empty">还没有听力数据</div>';
+      return;
+    }
+    wrap.innerHTML = listenState.data.map(function (set) {
+      var count = set.parts.reduce(function (n, p) { return n + p.sentences.length; }, 0);
+      return '<button type="button" class="listen-set-card" data-listen-set="' + esc(set.id) + '">' +
+        '<span class="ls-icon">' + ICON_SPEAK + '</span>' +
+        '<span class="ls-card-text"><strong>' + esc(set.title) + '</strong>' +
+        '<small>' + esc(String(set.parts.length)) + ' 篇 · ' + fmtListenTime(set.duration) + ' · ' + count + ' 句</small></span>' +
+        '<span class="ls-enter">精听 →</span></button>';
+    }).join('');
+  }
+
+  function renderListenParts() {
+    var wrap = $('#listenParts');
+    if (!wrap || !listenState.set) return;
+    wrap.innerHTML = listenState.set.parts.map(function (p, i) {
+      return '<button type="button" class="listen-part' + (i === listenState.part ? ' is-active' : '') + '" data-listen-part="' + i + '">' +
+        '<strong>' + esc(p.label) + '</strong>' +
+        (p.questions ? '<small>' + esc(p.questions) + '</small>' : '') +
+        '</button>';
+    }).join('');
+  }
+
+  function listenRowsHtml(part) {
+    return part.sentences.map(function (x, i) {
+      return '<div class="ls-row" data-ls-index="' + i + '" data-start="' + x.s + '">' +
         '<span class="ls-no">' + (i + 1) + '</span>' +
         '<div class="ls-text">' +
         '<p class="ls-en">' + listenEnHtml(x.en) + '</p>' +
@@ -1140,20 +1167,10 @@
     }).join('');
   }
 
-  function listenCurrentTime() {
-    var a = $('#listenAudio');
-    return a ? a.currentTime : 0;
-  }
-
   function setListenCurrent(index, scroll) {
     if (!listenState.rows.length) return;
     index = Math.max(0, Math.min(listenState.rows.length - 1, index));
-    if (listenState.current === index) {
-      var t0 = $('#listenTime');
-      var a0 = $('#listenAudio');
-      if (t0 && a0) t0.textContent = fmtListenTime(a0.currentTime) + ' / ' + fmtListenTime(listenDuration());
-      return;
-    }
+    if (listenState.current === index) return;
     listenState.current = index;
     listenState.rows.forEach(function (r, i) { r.classList.toggle('is-current', i === index); });
     var row = listenState.rows[index];
@@ -1164,68 +1181,93 @@
         try { wrap.scrollTo({ top: Math.max(0, target), behavior: 'smooth' }); } catch (e) { wrap.scrollTop = Math.max(0, target); }
       }
     }
-    var t = $('#listenTime');
-    var a = $('#listenAudio');
-    if (t && a) t.textContent = fmtListenTime(a.currentTime) + ' / ' + fmtListenTime(listenDuration());
+  }
+
+  function listenPartAt(t) {
+    if (!listenState.set) return 0;
+    var parts = listenState.set.parts;
+    for (var i = parts.length - 1; i >= 0; i--) {
+      if (t + 0.05 >= parts[i].start) return i;
+    }
+    return 0;
+  }
+
+  function selectListenPart(index, seek) {
+    var set = listenState.set;
+    if (!set) return;
+    index = Math.max(0, Math.min(set.parts.length - 1, Number(index) || 0));
+    listenState.part = index;
+    var part = set.parts[index];
+    var audio = $('#listenAudio');
+    var wrap = $('#listenTranscript');
+    listenState.current = -1;
+    if (wrap) {
+      wrap.innerHTML = listenRowsHtml(part);
+      wrap.classList.toggle('show-zh', !!listenState.showZh);
+      wrap.scrollTop = 0;
+    }
+    listenState.rows = $$('#listenTranscript .ls-row');
+    var t = $('#listenTitle');
+    if (t) t.textContent = set.title + ' · ' + part.label;
+    var meta = $('#listenTime');
+    if (meta && audio) meta.textContent = fmtListenTime(audio.currentTime) + ' / ' + fmtListenTime(listenDuration());
+    $$('#listenParts .listen-part').forEach(function (b, i) { b.classList.toggle('is-active', i === index); });
+    if (seek && audio) {
+      try { audio.currentTime = part.start; } catch (e) { }
+      var pr = audio.play();
+      if (pr && pr.catch) pr.catch(function () { });
+    }
+    syncListenHighlight(true);
   }
 
   function syncListenHighlight(force) {
-    if (!listenState.set || !listenState.rows.length) return;
-    var t = listenCurrentTime();
-    var idx = -1;
-    for (var i = 0; i < listenState.set.sentences.length; i++) {
-      if (listenState.set.sentences[i].s <= t + 0.05) idx = i;
+    if (!listenState.set) return;
+    var audio = $('#listenAudio');
+    if (!audio) return;
+    var t = audio.currentTime;
+    var pi = listenPartAt(t);
+    if (pi !== listenState.part) {
+      selectListenPart(pi, false);
+      if (!audio.paused) {
+        var part = listenState.set.parts[pi];
+        setListenCurrent(0, true);
+      }
+    }
+    var part = listenState.set.parts[listenState.part];
+    var idx = 0;
+    for (var i = 0; i < part.sentences.length; i++) {
+      if (part.sentences[i].s <= t + 0.05) idx = i;
       else break;
     }
-    if (idx < 0) idx = 0;
-    var playing = !$('#listenAudio') || !$('#listenAudio').paused;
-    if (idx !== listenState.current || force) setListenCurrent(idx, playing);
-    else {
-      var time = $('#listenTime');
-      var a = $('#listenAudio');
-      if (time && a) time.textContent = fmtListenTime(t) + ' / ' + fmtListenTime(listenDuration());
-    }
+    setListenCurrent(idx, !audio.paused || force);
+    var time = $('#listenTime');
+    if (time) time.textContent = fmtListenTime(t) + ' / ' + fmtListenTime(listenDuration());
   }
 
-  function loadListeningSet(id) {
+  function openListeningSet(id) {
     var set = listenState.data.find(function (x) { return x.id === id; }) || listenState.data[0];
     if (!set) return;
     listenState.set = set;
+    listenState.part = 0;
     listenState.current = -1;
     var audio = $('#listenAudio');
-    var title = $('#listenTitle');
-    if (title) title.textContent = set.title;
     if (audio) {
       audio.pause();
       audio.src = '/' + set.audio;
       audio.load();
       audio.playbackRate = Number(($('#listenSpeed .is-active') || {}).dataset ? $('#listenSpeed .is-active').dataset.listenRate : 1) || 1;
     }
-    var wrap = $('#listenTranscript');
-    if (wrap) wrap.innerHTML = listenRowsHtml(set);
-    listenState.rows = $$('#listenTranscript .ls-row');
-    var t = $('#listenTime');
-    if (t) t.textContent = '0:00 / ' + fmtListenTime(set.duration);
-    if (wrap) wrap.scrollTop = 0;
-    var sel = $('#listenSelect');
-    if (sel) sel.value = set.id;
+    var title = $('#listenSessionTitle');
+    var meta = $('#listenSessionMeta');
+    if (title) title.textContent = set.title;
+    if (meta) meta.textContent = set.parts.length + ' 篇 · ' + fmtListenTime(set.duration);
+    renderListenParts();
+    setView('listening-session');
+    selectListenPart(0, false);
   }
 
   function renderListening() {
-    if (!listenState.data.length) {
-      var wrap0 = $('#listenTranscript');
-      if (wrap0) wrap0.innerHTML = '<div class="lib-empty">还没有听力数据</div>';
-      return;
-    }
-    var sel = $('#listenSelect');
-    if (sel && !sel.options.length) {
-      sel.innerHTML = listenState.data.map(function (s) {
-        return '<option value="' + esc(s.id) + '">' + esc(s.title) + '</option>';
-      }).join('');
-    }
-    if (!listenState.set) loadListeningSet(listenState.data[0].id);
-    else if (sel && sel.value !== listenState.set.id) sel.value = listenState.set.id;
-    syncListenHighlight(false);
+    renderListenSets();
   }
 
   function showListenWordPanel(token, entry) {
@@ -1233,7 +1275,6 @@
     if (!panel) return;
     var known = !!entry;
     panel.hidden = false;
-    panel.dataset.token = token;
     panel.innerHTML =
       '<button type="button" class="wp-close" data-listen-close aria-label="关闭词义">✕</button>' +
       '<div class="wp-top"><span class="wp-word">' + esc(token) + '</span>' +
@@ -1246,8 +1287,18 @@
 
   function initListening() {
     if (!listenState.data.length) return;
-    var sel = $('#listenSelect');
-    if (sel) sel.addEventListener('change', function () { loadListeningSet(sel.value); });
+    var sets = $('#listenSets');
+    if (sets) sets.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-listen-set]');
+      if (b) openListeningSet(b.dataset.listenSet);
+    });
+    var back = $('#listenBack');
+    if (back) back.addEventListener('click', function () { setView('listening'); });
+    var parts = $('#listenParts');
+    if (parts) parts.addEventListener('click', function (e) {
+      var b = e.target.closest('[data-listen-part]');
+      if (b) selectListenPart(Number(b.dataset.listenPart), true);
+    });
     var audio = $('#listenAudio');
     if (audio) {
       audio.addEventListener('timeupdate', function () { syncListenHighlight(false); });
@@ -1264,6 +1315,13 @@
       $$('button', speed).forEach(function (x) { x.classList.toggle('is-active', x === b); });
       if (audio) audio.playbackRate = Number(b.dataset.listenRate) || 1;
     });
+    var zh = $('#listenZhToggle');
+    if (zh) zh.addEventListener('click', function () {
+      listenState.showZh = !listenState.showZh;
+      var wrap = $('#listenTranscript');
+      if (wrap) wrap.classList.toggle('show-zh', listenState.showZh);
+      zh.textContent = listenState.showZh ? '收起译文' : '显示全部译文';
+    });
     var wrap = $('#listenTranscript');
     if (wrap) wrap.addEventListener('click', function (e) {
       var w = e.target.closest('[data-ls-word]');
@@ -1275,7 +1333,8 @@
       }
       var row = e.target.closest('.ls-row');
       if (row && audio && listenState.set) {
-        var s = listenState.set.sentences[Number(row.dataset.lsIndex)];
+        var part = listenState.set.parts[listenState.part];
+        var s = part.sentences[Number(row.dataset.lsIndex)];
         if (!s) return;
         try { audio.currentTime = s.s; } catch (err) { }
         setListenCurrent(Number(row.dataset.lsIndex), false);
@@ -3436,7 +3495,9 @@
     state.view = name;
     $$('.view').forEach(function (v) { v.classList.toggle('is-active', v.id === 'view-' + name); });
     $$('.nav-btn').forEach(function (b) {
-      b.classList.toggle('is-active', b.dataset.nav === name || (name === 'result' && b.dataset.nav === 'home'));
+      b.classList.toggle('is-active', b.dataset.nav === name ||
+        (name === 'result' && b.dataset.nav === 'home') ||
+        (name === 'listening-session' && b.dataset.nav === 'listening'));
     });
     document.body.classList.toggle('in-session', name === 'study');
     if (name !== 'study') {
@@ -3449,7 +3510,7 @@
     if (name === 'stats') renderStats();
     if (name === 'wrong') renderWrong();
     if (name === 'listening') renderListening();
-    if (name !== 'listening') {
+    if (name !== 'listening-session') {
       var la = $('#listenAudio');
       if (la) la.pause();
     }
@@ -3467,6 +3528,18 @@
     }
     setView(name);
   });
+
+  var lastScrollTop = 0;
+  window.addEventListener('scroll', function () {
+    var bar = $('#topbar');
+    if (!bar) return;
+    var top = window.scrollY || document.documentElement.scrollTop || 0;
+    var delta = top - lastScrollTop;
+    if (top < 36) bar.classList.remove('is-hidden');
+    else if (delta > 6) bar.classList.add('is-hidden');
+    else if (delta < -6) bar.classList.remove('is-hidden');
+    lastScrollTop = top;
+  }, { passive: true });
 
   /* ---------------- 键盘 ---------------- */
   document.addEventListener('keydown', function (e) {

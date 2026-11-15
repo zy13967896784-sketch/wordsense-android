@@ -1020,3 +1020,41 @@ body.in-session .main { padding-top: 8px; }
   .listen-word-panel { bottom: 12px; }
 }
 #view-listening { padding-bottom: 72px; }
+
+/* ---------- 精听列表 / 分篇 ---------- */
+.listen-sets { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.listen-set-card { display: flex; align-items: center; gap: 14px; width: 100%; text-align: left; padding: 18px 18px; background: var(--card); border: 1px solid var(--line); border-radius: 18px; cursor: pointer; transition: transform .2s, border-color .2s, background .2s; }
+.listen-set-card:hover { transform: translateY(-2px); border-color: var(--jade); background: var(--jade-soft); }
+.ls-icon { display: grid; place-items: center; flex: none; width: 42px; height: 42px; border-radius: 50%; background: var(--jade-soft); color: var(--jade-deep); }
+.ls-icon svg { width: 20px; height: 20px; }
+.ls-card-text { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.ls-card-text strong { font-family: var(--font-display); font-size: 18px; font-weight: 500; }
+.ls-card-text small { color: var(--muted); font-size: 11.5px; }
+.ls-enter { margin-left: auto; color: var(--jade-deep); font-size: 12px; white-space: nowrap; }
+.listen-session-head { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px; }
+.listen-session-head .icon-btn { margin-top: 8px; flex: none; }
+.listen-session-head h1 { margin: 3px 0 3px; font-family: var(--font-display); font-size: clamp(24px, 4vw, 34px); font-weight: 500; letter-spacing: -0.02em; }
+.listen-session-head .section-sub { margin: 0; color: var(--muted); font-size: 12px; }
+.listen-parts { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 12px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+.listen-parts::-webkit-scrollbar { display: none; }
+.listen-part { flex: none; display: flex; flex-direction: column; gap: 2px; align-items: flex-start; border: 1px solid var(--line); background: var(--card); border-radius: 12px; padding: 8px 13px; cursor: pointer; color: var(--ink-2); }
+.listen-part strong { font-size: 12.5px; font-weight: 550; white-space: nowrap; }
+.listen-part small { font-size: 10px; color: var(--muted); white-space: nowrap; }
+.listen-part.is-active { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.listen-part.is-active small { color: var(--bg); opacity: .7; }
+.listen-tools { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; margin-top: 8px; }
+.listen-speed { margin-top: 0; }
+.listen-zh-toggle { border: 1px solid var(--line); background: transparent; color: var(--muted); border-radius: 999px; padding: 3px 10px; font-size: 11px; cursor: pointer; }
+.ls-zh { display: none; }
+.ls-row.is-current .ls-zh, .listen-transcript.show-zh .ls-zh { display: block; }
+#view-listening-session { padding-bottom: 72px; }
+#topbar { transition: transform .28s var(--ease), opacity .28s var(--ease); }
+#topbar.is-hidden { transform: translateY(calc(-100% - 22px)); opacity: 0; pointer-events: none; }
+@media (max-width: 760px) {
+  .listen-sets { grid-template-columns: 1fr; }
+  .listen-set-card { padding: 15px 14px; }
+  .listen-session-head { gap: 8px; }
+  .listen-session-head .icon-btn { width: 34px; height: 34px; }
+  .listen-parts { margin: 0 -2px; }
+  .listen-tools { align-items: flex-start; }
+}

@@ -13,7 +13,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
   <meta name="apple-mobile-web-app-title" content="词感" />
-  <link rel="stylesheet" href="assets/app.css?v=20261115b" />
+  <link rel="stylesheet" href="assets/app.css?v=20261115e" />
 </head>
 <body>
   <div class="bg-art" aria-hidden="true">
@@ -293,27 +293,43 @@
         <div class="card stats-breakdown" id="statsBreakdown"></div>
       </section>
 
-      <!-- ============ 听力精听 ============ -->
+      <!-- ============ 听力精听：真题列表 ============ -->
       <section class="view" id="view-listening" aria-label="听力精听">
         <div class="listen-head">
           <div>
             <p class="eyebrow">LISTENING INTENSIVE</p>
             <h1>听力精听</h1>
-            <p class="section-sub">四级真题原声 · 读到哪句高亮哪句 · 点单词看释义</p>
+            <p class="section-sub">四级真题原声 · 一篇一篇拆开听 · 点单词看释义</p>
           </div>
-          <select class="bank-select" id="listenSelect" aria-label="选择听力真题"></select>
         </div>
+        <div class="listen-sets" id="listenSets"></div>
+      </section>
+
+      <!-- ============ 听力精听：独立练习界面 ============ -->
+      <section class="view" id="view-listening-session" aria-label="听力练习">
+        <div class="listen-session-head">
+          <button type="button" class="icon-btn" id="listenBack" aria-label="返回真题列表">←</button>
+          <div>
+            <p class="eyebrow">INTENSIVE LISTENING</p>
+            <h1 id="listenSessionTitle">听力真题</h1>
+            <p class="section-sub" id="listenSessionMeta"></p>
+          </div>
+        </div>
+        <div class="listen-parts" id="listenParts"></div>
         <div class="listen-audio-card">
           <div class="listen-now">
             <strong id="listenTitle">听力真题</strong>
             <span id="listenTime">0:00 / 0:00</span>
           </div>
           <audio id="listenAudio" controls preload="metadata"></audio>
-          <div class="listen-speed" id="listenSpeed">
-            <span>语速</span>
-            <button type="button" data-listen-rate="0.75">0.75×</button>
-            <button type="button" data-listen-rate="1" class="is-active">1.0×</button>
-            <button type="button" data-listen-rate="1.25">1.25×</button>
+          <div class="listen-tools">
+            <div class="listen-speed" id="listenSpeed">
+              <span>语速</span>
+              <button type="button" data-listen-rate="0.75">0.75×</button>
+              <button type="button" data-listen-rate="1" class="is-active">1.0×</button>
+              <button type="button" data-listen-rate="1.25">1.25×</button>
+            </div>
+            <button type="button" class="listen-zh-toggle" id="listenZhToggle">显示全部译文</button>
           </div>
         </div>
         <div class="listen-transcript" id="listenTranscript"></div>
@@ -352,12 +368,12 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
   <div class="confetti-layer" id="confettiLayer" aria-hidden="true"></div>
 
-  <script src="data/words.js?v=20261115b"></script>
-  <script src="data/listening.js?v=20261115b"></script>
-  <script src="js/polyfills.js?v=20261115b"></script>
-  <script src="js/srs.js?v=20261115b"></script>
-  <script src="js/store.js?v=20261115b"></script>
-  <script src="js/score.js?v=20261115b"></script>
-  <script src="js/app.js?v=20261115b"></script>
+  <script src="data/words.js?v=20261115e"></script>
+  <script src="data/listening.js?v=20261115e"></script>
+  <script src="js/polyfills.js?v=20261115e"></script>
+  <script src="js/srs.js?v=20261115e"></script>
+  <script src="js/store.js?v=20261115e"></script>
+  <script src="js/score.js?v=20261115e"></script>
+  <script src="js/app.js?v=20261115e"></script>
 </body>
 </html>
