@@ -1175,7 +1175,7 @@
 
   function listenRowsHtml(part) {
     return part.sentences.map(function (x, i) {
-      return '<div class="ls-row" data-ls-index="' + i + '" data-start="' + x.s + '">' +
+      return '<div class="ls-row' + (x.q ? ' ls-q' : '') + '" data-ls-index="' + i + '" data-start="' + x.s + '">' +
         '<span class="ls-no">' + (i + 1) + '</span>' +
         '<div class="ls-text">' +
         '<p class="ls-en">' + listenEnHtml(x.en) + '</p>' +
