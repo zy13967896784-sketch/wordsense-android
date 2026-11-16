@@ -1086,3 +1086,7 @@ body.in-listening-session .main { padding-top: 8px; }
   z-index: 200 !important;
   margin: 0 !important;
 }
+/* 默认展示逐句译文；可手动收起 */
+.ls-zh { display: block; }
+.listen-transcript.hide-zh .ls-zh { display: none; }
+.listen-transcript.hide-zh .ls-row.is-current .ls-zh { display: block; }

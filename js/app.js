@@ -1220,7 +1220,7 @@
     listenState.current = -1;
     if (wrap) {
       wrap.innerHTML = listenRowsHtml(part);
-      wrap.classList.toggle('show-zh', !!listenState.showZh);
+      wrap.classList.toggle('hide-zh', !!listenState.hideZh);
       wrap.scrollTop = 0;
     }
     listenState.rows = $$('#listenTranscript .ls-row');
@@ -1335,10 +1335,10 @@
     });
     var zh = $('#listenZhToggle');
     if (zh) zh.addEventListener('click', function () {
-      listenState.showZh = !listenState.showZh;
+      listenState.hideZh = !listenState.hideZh;
       var wrap = $('#listenTranscript');
-      if (wrap) wrap.classList.toggle('show-zh', listenState.showZh);
-      zh.textContent = listenState.showZh ? '收起译文' : '显示全部译文';
+      if (wrap) wrap.classList.toggle('hide-zh', listenState.hideZh);
+      zh.textContent = listenState.hideZh ? '显示全部译文' : '收起译文';
     });
     var wrap = $('#listenTranscript');
     if (wrap) wrap.addEventListener('click', function (e) {
