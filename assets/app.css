@@ -1090,3 +1090,10 @@ body.in-listening-session .main { padding-top: 8px; }
 .ls-zh { display: block; }
 .listen-transcript.hide-zh .ls-zh { display: none; }
 .listen-transcript.hide-zh .ls-row.is-current .ls-zh { display: block; }
+/* 整段对照译文，避免逐句机翻错位 */
+.ls-zh { display: none !important; }
+.listen-part-zh { margin: 0 0 12px; padding: 14px 18px; background: var(--jade-soft); border: 1px solid var(--line); border-radius: 16px; max-height: 26vh; overflow-y: auto; }
+.listen-part-zh[hidden] { display: none !important; }
+.listen-part-zh > span { display: block; margin-bottom: 6px; font-size: 10.5px; letter-spacing: 0.12em; color: var(--jade-deep); text-transform: uppercase; }
+.listen-part-zh p { margin: 0; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
+@media (max-width: 760px) { .listen-part-zh { max-height: 24vh; padding: 12px 14px; } .listen-part-zh p { font-size: 13.5px; } }
