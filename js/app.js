@@ -1291,6 +1291,7 @@
     var panel = $('#listenWordPanel');
     if (!panel) return;
     var known = !!entry;
+    if (panel.parentNode !== document.body) document.body.appendChild(panel);
     panel.hidden = false;
     panel.innerHTML =
       '<button type="button" class="wp-close" data-listen-close aria-label="关闭词义">✕</button>' +
@@ -3517,6 +3518,7 @@
         (name === 'listening-session' && b.dataset.nav === 'listening'));
     });
     document.body.classList.toggle('in-session', name === 'study');
+    document.body.classList.toggle('in-listening-session', name === 'listening-session');
     if (name !== 'study') {
       stopStudyTimer();
       cleanupReadMedia();
@@ -3530,6 +3532,8 @@
     if (name !== 'listening-session') {
       var la = $('#listenAudio');
       if (la) la.pause();
+      var lp = $('#listenWordPanel');
+      if (lp) lp.hidden = true;
     }
     renderTtsBtn();
   }

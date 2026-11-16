@@ -1067,3 +1067,22 @@ body.in-session .main { padding-top: 8px; }
 .ls-row.ls-q .ls-en { font-size: 13.5px; color: var(--ink-2); }
 .ls-row.ls-q .ls-no { color: var(--amber); }
 .ls-row.ls-q.is-current { background: var(--jade-soft); }
+/* 精听试卷详情页：隐藏上下导航，词义固定到底部 */
+body.in-listening-session .topbar { display: none !important; }
+body.in-listening-session .main { padding-top: 8px; }
+@media (max-width: 760px) {
+  body.in-listening-session .nav { display: none !important; }
+  body.in-listening-session .shell { padding-bottom: 20px; }
+}
+#view-listening-session { padding-bottom: 24px; }
+#listenWordPanel {
+  position: fixed !important;
+  left: 50% !important;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px)) !important;
+  transform: translateX(-50%) !important;
+  width: min(520px, calc(100vw - 24px)) !important;
+  max-height: 46vh;
+  overflow-y: auto;
+  z-index: 200 !important;
+  margin: 0 !important;
+}
