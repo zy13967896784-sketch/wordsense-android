@@ -1220,13 +1220,8 @@
     listenState.current = -1;
     if (wrap) {
       wrap.innerHTML = listenRowsHtml(part);
+      wrap.classList.toggle('hide-zh', !!listenState.hideZh);
       wrap.scrollTop = 0;
-    }
-    var pz = $('#listenPartZh');
-    if (pz) {
-      pz.hidden = !!listenState.hideZh;
-      var pzt = pz.querySelector('p');
-      if (pzt) pzt.textContent = part.zh || '';
     }
     listenState.rows = $$('#listenTranscript .ls-row');
     var t = $('#listenTitle');
@@ -1341,9 +1336,9 @@
     var zh = $('#listenZhToggle');
     if (zh) zh.addEventListener('click', function () {
       listenState.hideZh = !listenState.hideZh;
-      var pz = $('#listenPartZh');
-      if (pz) pz.hidden = listenState.hideZh;
-      zh.textContent = listenState.hideZh ? '显示本段译文' : '收起译文';
+      var wrap = $('#listenTranscript');
+      if (wrap) wrap.classList.toggle('hide-zh', listenState.hideZh);
+      zh.textContent = listenState.hideZh ? '显示译文' : '收起译文';
     });
     var wrap = $('#listenTranscript');
     if (wrap) wrap.addEventListener('click', function (e) {

@@ -1097,3 +1097,7 @@ body.in-listening-session .main { padding-top: 8px; }
 .listen-part-zh > span { display: block; margin-bottom: 6px; font-size: 10.5px; letter-spacing: 0.12em; color: var(--jade-deep); text-transform: uppercase; }
 .listen-part-zh p { margin: 0; font-size: 14px; line-height: 1.8; color: var(--ink-2); }
 @media (max-width: 760px) { .listen-part-zh { max-height: 24vh; padding: 12px 14px; } .listen-part-zh p { font-size: 13.5px; } }
+/* 逐句译文：默认全部显示，可整体收起 */
+.ls-zh { display: block !important; }
+.listen-transcript.hide-zh .ls-zh { display: none !important; }
+.listen-part-zh { display: none !important; }
